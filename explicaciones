@@ -1,0 +1,194 @@
+// Este es el programa principal que se va a ajecutar
+//package main
+
+/*importaciones
+Se traen herramientas ya hechas en go
+- fmt: sirve para imprimir texto
+- net/http: permite crear servidores web, manejar rutas
+net/http es el corazón del backend
+
+
+
+type Task struct {
+	//`controla cómo se ve el json`
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+}
+
+// esto hace que las tareas no se pierdan con cada request
+// varable global
+var tasks = []Task{
+	{ID: 1, Title: "Aprender Go"},
+	{ID: 2, Title: "Construir API"},
+}
+
+/*
+esta es una función que maneja una petición web
+- w http.ResponseWriter: es la respuesta o lo que envias al navegador
+en otras palabras, todo lo que escribas aquí se muestra en pantalla
+- r *http.Request: es la petición, lo que el usuario envia
+(URL, datos, etc)
+por ejemplo: la ruta y el metodo (GET,POST)
+
+func home(w http.ResponseWriter, r *http.Request) {
+	//escribe el texto en la variable w y lo envia al navegador
+	//cuando alguien entre, muestrale este mensaje
+	fmt.Fprint(w, "Heladeria API funcionando 🍦 ")
+}
+
+func getTasks(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Lista de tareas 📝")
+	//content type le dice al navegador que es json
+	//Enconde convierte Go -> json automaticamente
+	w.Header().Set("Content-Type", "applications/json")
+	json.NewEncoder(w).Encode(tasks)
+}
+
+// creamos el handler post
+func createTask(w http.ResponseWriter, r *http.Request) {
+	var newTask Task
+	// r. Body = datos que envia el cliente
+	// toma los datos que enviaste y los convierte en un struct
+	err := json.NewDecoder(r.Body).Decode(&newTask)
+	if err != nil {
+		http.Error(w, "Error al leer los datos", http.StatusBadRequest)
+		return
+	}
+
+	newTask.ID = len(tasks) + 1
+	//agrega la nueva tarea
+	tasks = append(tasks, newTask)
+	//Te eestoy enviando json
+	w.Header().Set("Content-Type", "application/json")
+	// convierte Go en Json
+	json.NewEncoder(w).Encode(newTask)
+}
+
+// este es el punto donde inicia todo el programa
+func main() {
+	/* Regristra la ruta
+	- "/": ruta principal
+	- home: funcion que se ejecuta
+	cuando alguien entre a / ejecuta la funcion home
+
+	http.HandleFunc("/", home)
+	//registramos la ruta en main()
+	//http.HandleFunc("/tasks", getTasks)
+	//Registramos la ruta
+	// Ahora la misma ruta maneja GET y POST
+	// Go recibe la peticion y entra aquí
+	// Estamos creando un endpoint POST /tasks o Get /task mismas rutas
+	//diferente comportamiento
+	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			getTasks(w, r)
+		case "POST":
+			createTask(w, r)
+		}
+	})
+
+	/*Mensaje de consola
+	solo imprime en la terminal
+
+	fmt.Println("servidor corriendo en http://localhost:8080")
+	/*
+		Levantar el servidor
+		+ esta la linea mas importante porque inicia el servidor y
+		escucha en el puerto 8080
+		accedemos al puerto de esta manera
+		http://localhost:8080
+
+	http.ListenAndServe(":8080", nil)
+}
+
+/*
+funcionamiento visual
+Navegador → / → servidor → home() → respuesta → pantalla
+
+r es el pedido del cliente
+home() el chef
+w el plato servido
+*/
+
+/*
+flujo completo
+Postman
+   ↓
+envía JSON
+   ↓
+Servidor recibe (r)
+   ↓
+createTask()
+   ↓
+Decode JSON → struct
+   ↓
+Agrega ID
+   ↓
+Guarda en lista
+   ↓
+Encode → JSON
+   ↓
+Respuesta (w)
+   ↓
+Postman muestra resultado
+*/
+
+/*
+Cliente (Postman)
+   ↓
+routes → handlers → database → PostgreSQL
+   ↓
+respuesta JSON
+*/
+
+/*
+Postman
+   ↓
+POST /tasks
+   ↓
+routes
+   ↓
+handler (CreateTask)
+   ↓
+Decode JSON
+   ↓
+SQL INSERT
+   ↓
+PostgreSQL guarda
+   ↓
+Respuesta JSON*/
+/*
+Cliente (Postman)
+   ↓
+PUT /tasks?id=1
+   ↓
+Handler (UpdateTask)
+   ↓
+Convierte JSON + ID
+   ↓
+Service (UpdateTask)
+   ↓
+SQL UPDATE
+   ↓
+PostgreSQL
+   ↓
+Respuesta HTTP*/
+
+/*r.Method   // GET, POST, PUT, DELETE
+r.Body     // datos enviados
+r.Header   // headers*/
+
+/*Request
+ ↓
+Router
+ ↓
+Handler
+ ↓
+Service
+ ↓
+Interface
+ ↓
+Repository
+ ↓
+PostgreSQL*/
