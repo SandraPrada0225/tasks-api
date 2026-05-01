@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"tasks-api/internal/dto"
 	"tasks-api/internal/models"
 	"tasks-api/internal/services"
 	"tasks-api/internal/utils"
@@ -20,93 +21,83 @@ func NewTaskHandler(s *services.TaskService) *TaskHandler {
 	return &TaskHandler{service: s}
 }
 
-func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) {
-	//ejecutamos el query
+func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) error {
+
 	tasks, err := h.service.GetAllTasks()
 	if err != nil {
-		utils.JSONError(w, http.StatusInternalServerError, "Error al obtener los datos")
-		return
+		return utils.NewError("Error al obtener tareas", http.StatusInternalServerError)
 	}
 	utils.JSONResponse(w, http.StatusOK, tasks)
+	return nil
 }
 
-func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
-	var newTask models.Task
+func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
+	var body dto.CreateTaskDTO
 
-	err := json.NewDecoder(r.Body).Decode(&newTask)
-	if err != nil {
-		utils.JSONError(w, http.StatusBadRequest, "Error al leer datos")
-		return
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return utils.NewError("Error al leer datos", http.StatusBadRequest)
 	}
 	//validaciones
-	if strings.TrimSpace(newTask.Title) == "" {
-		utils.JSONError(w, http.StatusBadRequest, "El titulo es obligatorio")
-		return
+
+	if err := body.Validate(); err != nil {
+		return err
 	}
 
-	if len(newTask.Title) > 100 {
-		utils.JSONError(w, http.StatusBadRequest, "El titulo es demasiado largo")
-		return
-	}
-
-	task, err := h.service.CreateTask(newTask.Title)
+	task, err := h.service.CreateTask(body.Title)
 	if err != nil {
-		utils.JSONError(w, http.StatusInternalServerError, "Error al guadar los datos en la DB")
-		return
+		return utils.NewError("Error al guadar los datos en la DB", http.StatusInternalServerError)
 	}
 	//responde con la tarea creada
-	utils.JSONResponse(w, http.StatusOK, task)
+	utils.JSONResponse(w, http.StatusCreated, task)
+	return nil
 }
 
-func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		utils.JSONError(w, http.StatusBadRequest, "ID invalido")
-		return
+		return utils.NewError("ID invalido", http.StatusBadRequest)
 	}
+
 	var UpdateTask models.Task
 	err = json.NewDecoder(r.Body).Decode(&UpdateTask)
 	if err != nil {
-		utils.JSONError(w, http.StatusBadRequest, err.Error())
-		return
+		return utils.NewError(err.Error(), http.StatusBadRequest)
 	}
 
 	//validaciones
 	if strings.TrimSpace(UpdateTask.Title) == "" {
-		utils.JSONError(w, http.StatusBadRequest, "El titulo es obligatorio")
-		return
+		return utils.NewError("El titulo es obligatorio", http.StatusBadRequest)
 	}
 
 	err = h.service.UpdateTask(id, UpdateTask.Title)
 	if err != nil {
-		utils.JSONError(w, http.StatusNotFound, err.Error())
-		return
+		return utils.NewError(err.Error(), http.StatusNotFound)
 	}
 	utils.JSONResponse(w, http.StatusOK, map[string]string{
 		"message": "Tarea actualizada",
 	})
+	return nil
 }
 
-func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		utils.JSONError(w, http.StatusBadRequest, "ID invalido")
-		return
+		return utils.NewError("ID invalido", http.StatusBadRequest)
 	}
 
 	err = h.service.DeleteTask(id)
 	if err != nil {
-		utils.JSONError(w, http.StatusNotFound, err.Error())
-		return
+		return utils.NewError(err.Error(), http.StatusNotFound)
 	}
+
 	utils.JSONResponse(w, http.StatusOK, map[string]string{
 		"message": "Tarea eliminada",
 	})
-
+	return nil
 }
