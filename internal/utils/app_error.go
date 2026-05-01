@@ -1,18 +1,20 @@
 package utils
 
 type AppError struct {
-	Message string
-	Code    int
+	Code    string `json: "code"`
+	Message string `json: "message"`
+	Status  int    `json: "-"`
 }
 
 func (e *AppError) Error() string {
 	return e.Message
 }
 
-func NewError(message string, code int) *AppError {
+func NewError(message string, code string, status int) *AppError {
 	return &AppError{
-		Message: message,
 		Code:    code,
+		Message: message,
+		Status:  status,
 	}
 
 }

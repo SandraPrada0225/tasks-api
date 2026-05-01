@@ -6,6 +6,6 @@ import "tasks-api/internal/models"
 type TaskRepository interface {
 	GetAll() ([]models.Task, error)
 	Create(title string) (models.Task, error)
-	Update(id int, title string) error
-	Delete(id int) error
+	Update(id int, title string) (int64, error)
+	Delete(id int) (int64, error)
 }

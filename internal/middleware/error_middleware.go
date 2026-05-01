@@ -21,11 +21,15 @@ func ErrorMiddleware(h AppHandler) http.HandlerFunc {
 		}
 		//error personalizado
 		if appError, ok := err.(*utils.AppError); ok {
-			utils.JSONError(w, appError.Code, appError.Message)
+			utils.JSONResponse(w, appError.Status, map[string]interface{}{
+				"error": map[string]string{
+					"code":    appError.Code,
+					"message": appError.Message,
+				},
+			})
 			return
 		}
 		//error genérico
 		utils.JSONError(w, http.StatusInternalServerError, "Error interno del servidor")
-		//fmt.Printf("Tipo de error: %T\n", err)
 	}
 }

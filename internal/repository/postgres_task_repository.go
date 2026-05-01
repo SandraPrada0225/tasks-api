@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"tasks-api/internal/models"
 )
 
@@ -42,32 +41,32 @@ func (r *PostgresTaskRepository) Create(title string) (models.Task, error) {
 	return task, nil
 }
 
-func (r *PostgresTaskRepository) Update(id int, title string) error {
+func (r *PostgresTaskRepository) Update(id int, title string) (int64, error) {
 	query := "UPDATE tasks SET title=$1 WHERE id=$2"
 
 	result, err := r.DB.Exec(query, title, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("task no encontrada")
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return rowsAffected, nil
 }
 
-func (r *PostgresTaskRepository) Delete(id int) error {
+func (r *PostgresTaskRepository) Delete(id int) (int64, error) {
 	query := "DELETE FROM tasks WHERE id=$1"
 
 	result, err := r.DB.Exec(query, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return fmt.Errorf("task no encontrada")
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	return rowsAffected, nil
 }

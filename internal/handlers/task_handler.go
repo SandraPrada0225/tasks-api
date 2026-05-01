@@ -25,7 +25,7 @@ func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) error {
 
 	tasks, err := h.service.GetAllTasks()
 	if err != nil {
-		return utils.NewError("Error al obtener tareas", http.StatusInternalServerError)
+		return err //utils.NewError("Error al obtener tareas", http.StatusInternalServerError)
 	}
 	utils.JSONResponse(w, http.StatusOK, tasks)
 	return nil
@@ -35,7 +35,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 	var body dto.CreateTaskDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		return utils.NewError("Error al leer datos", http.StatusBadRequest)
+		return err //utils.NewError("Error al leer datos", http.StatusBadRequest)
 	}
 	//validaciones
 
@@ -45,7 +45,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 
 	task, err := h.service.CreateTask(body.Title)
 	if err != nil {
-		return utils.NewError("Error al guadar los datos en la DB", http.StatusInternalServerError)
+		return err //utils.NewError("Error al guadar los datos en la DB", http.StatusInternalServerError)
 	}
 	//responde con la tarea creada
 	utils.JSONResponse(w, http.StatusCreated, task)
@@ -58,23 +58,23 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) error {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return utils.NewError("ID invalido", http.StatusBadRequest)
+		return err //utils.NewError("ID invalido", http.StatusBadRequest)
 	}
 
 	var UpdateTask models.Task
 	err = json.NewDecoder(r.Body).Decode(&UpdateTask)
 	if err != nil {
-		return utils.NewError(err.Error(), http.StatusBadRequest)
+		return err //utils.NewError(err.Error(), http.StatusBadRequest)
 	}
 
 	//validaciones
 	if strings.TrimSpace(UpdateTask.Title) == "" {
-		return utils.NewError("El titulo es obligatorio", http.StatusBadRequest)
+		return err //utils.NewError("El titulo es obligatorio", http.StatusBadRequest)
 	}
 
 	err = h.service.UpdateTask(id, UpdateTask.Title)
 	if err != nil {
-		return utils.NewError(err.Error(), http.StatusNotFound)
+		return err //utils.NewError(err.Error(), http.StatusNotFound)
 	}
 	utils.JSONResponse(w, http.StatusOK, map[string]string{
 		"message": "Tarea actualizada",
@@ -88,12 +88,12 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) error {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return utils.NewError("ID invalido", http.StatusBadRequest)
+		return err //utils.NewError("ID invalido", http.StatusBadRequest)
 	}
 
 	err = h.service.DeleteTask(id)
 	if err != nil {
-		return utils.NewError(err.Error(), http.StatusNotFound)
+		return err //utils.NewError(err.Error(), http.StatusNotFound)
 	}
 
 	utils.JSONResponse(w, http.StatusOK, map[string]string{

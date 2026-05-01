@@ -1,9 +1,13 @@
 package services
 
 import (
+	"net/http"
 	"tasks-api/internal/models"
 	"tasks-api/internal/repository"
+	"tasks-api/internal/utils"
 )
+
+//service valida si los datos tienen sentido en el sistema
 
 // estructura
 type TaskService struct {
@@ -27,10 +31,36 @@ func (s *TaskService) CreateTask(title string) (models.Task, error) {
 
 // update
 func (s *TaskService) UpdateTask(id int, title string) error {
-	return s.repo.Update(id, title)
+	rowsAffected, err := s.repo.Update(id, title)
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewError(
+			"TASK_NOT_FOUND",
+			"La tarea no existe",
+			http.StatusNotFound,
+		)
+	}
+
+	return nil
 }
 
 // Delete
 func (s *TaskService) DeleteTask(id int) error {
-	return s.repo.Delete(id)
+	rowsAffected, err := s.repo.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return utils.NewError(
+			"TASK_NOT_FOUND",
+			"La tarea no existe",
+			http.StatusNotFound,
+		)
+	}
+
+	return nil
 }
