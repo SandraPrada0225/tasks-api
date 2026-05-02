@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"net/http"
 	"tasks-api/internal/models"
 	"tasks-api/internal/repository"
@@ -24,6 +25,23 @@ func (s *TaskService) GetAllTasks() ([]models.Task, error) {
 	return s.repo.GetAll()
 }
 
+// consulta por id
+func (s *TaskService) GetTaskByID(id int) (models.Task, error) {
+
+	task, err := s.repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return task, utils.NewAppError(
+				"TASK_NO_FOUND",
+				"la tarea no exsite",
+				http.StatusNotFound,
+			)
+		}
+		return task, err
+	}
+	return task, nil
+}
+
 // crear
 func (s *TaskService) CreateTask(title string) (models.Task, error) {
 	return s.repo.Create(title)
@@ -37,7 +55,7 @@ func (s *TaskService) UpdateTask(id int, title string) error {
 	}
 
 	if rowsAffected == 0 {
-		return utils.NewError(
+		return utils.NewAppError(
 			"TASK_NOT_FOUND",
 			"La tarea no existe",
 			http.StatusNotFound,
@@ -55,7 +73,7 @@ func (s *TaskService) DeleteTask(id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return utils.NewError(
+		return utils.NewAppError(
 			"TASK_NOT_FOUND",
 			"La tarea no existe",
 			http.StatusNotFound,

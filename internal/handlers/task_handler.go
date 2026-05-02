@@ -31,6 +31,24 @@ func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) error {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return utils.ErrInvalidID() //utils.NewAppError("INVALID_ID", "ID invalido", http.StatusBadRequest)
+	}
+
+	task, err := h.service.GetTaskByID(id)
+	if err != nil {
+		return err
+	}
+
+	utils.JSONResponse(w, http.StatusOK, task)
+	return nil
+}
+
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 	var body dto.CreateTaskDTO
 

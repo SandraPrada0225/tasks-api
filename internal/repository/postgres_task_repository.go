@@ -30,6 +30,19 @@ func (r *PostgresTaskRepository) GetAll() ([]models.Task, error) {
 	return tasks, nil
 }
 
+func (r *PostgresTaskRepository) GetByID(id int) (models.Task, error) {
+	var task models.Task
+
+	query := "SELECT id, title FROM tasks WHERE id=$1"
+
+	err := r.DB.QueryRow(query, id).Scan(&task.ID, &task.Title)
+	if err != nil {
+		return task, err
+	}
+
+	return task, nil
+}
+
 func (r *PostgresTaskRepository) Create(title string) (models.Task, error) {
 	var task models.Task
 	query := "INSERT INTO tasks (title) VALUES ($1) RETURNING id"
