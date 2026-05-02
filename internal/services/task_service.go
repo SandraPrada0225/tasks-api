@@ -10,6 +10,14 @@ import (
 
 //service valida si los datos tienen sentido en el sistema
 
+type TaskServiceInterface interface {
+	GetAllTasks() ([]models.Task, error)
+	GetTaskByID(id int) (models.Task, error)
+	CreateTask(title string) (models.Task, error)
+	UpdateTask(id int, title string) error
+	DeleteTask(id int) error
+}
+
 // estructura
 type TaskService struct {
 	repo repository.TaskRepository
@@ -33,7 +41,7 @@ func (s *TaskService) GetTaskByID(id int) (models.Task, error) {
 		if err == sql.ErrNoRows {
 			return task, utils.NewAppError(
 				"TASK_NOT_FOUND",
-				"la tarea no exsite",
+				"la tarea no existe",
 				http.StatusNotFound,
 			)
 		}
