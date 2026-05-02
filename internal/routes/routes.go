@@ -10,7 +10,8 @@ import (
 // funcion que registra los endpoints
 func RegisterRoutes(handler *handlers.TaskHandler) *mux.Router {
 	r := mux.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(middleware.RecoveryMiddleware)
+	r.Use(middleware.LoggingMiddleware)
 
 	r.HandleFunc("/tasks", middleware.ErrorMiddleware(handler.GetTasks)).Methods("GET")
 	r.HandleFunc("/tasks/{id}", middleware.ErrorMiddleware(handler.GetTaskByID)).Methods("GET")
