@@ -32,7 +32,7 @@ func (s *TaskService) GetTaskByID(id int) (models.Task, error) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return task, utils.NewAppError(
-				"TASK_NO_FOUND",
+				"TASK_NOT_FOUND",
 				"la tarea no exsite",
 				http.StatusNotFound,
 			)
