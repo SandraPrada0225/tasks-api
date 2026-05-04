@@ -53,12 +53,18 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 	var body dto.CreateTaskDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		return err //utils.NewError("Error al leer datos", http.StatusBadRequest)
+		return utils.NewAppError(
+			"INVALID_JSON",
+			"JSON inválido",
+			http.StatusBadRequest)
 	}
 	//validaciones
 
 	if err := body.Validate(); err != nil {
-		return err
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			"El titulo es obligatorio",
+			http.StatusBadRequest)
 	}
 
 	task, err := h.service.CreateTask(body.Title)

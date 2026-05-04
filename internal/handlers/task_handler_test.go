@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"tasks-api/internal/models"
 	"tasks-api/internal/utils"
 	"testing"
@@ -41,6 +42,101 @@ func (m *mockService) UpdateTask(id int, title string) error {
 
 func (m *mockService) DeleteTask(id int) error {
 	return nil
+}
+
+func TestCreateTask_Handler(t *testing.T) {
+	tests := []struct {
+		name           string
+		body           string
+		mockFunc       func(title string) (models.Task, error)
+		expectedStatus int
+	}{
+		{
+			name: "succes",
+			body: `{"title": "Nueva tarea"}`,
+			mockFunc: func(title string) (models.Task, error) {
+				return models.Task{ID: 1, Title: title}, nil
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:           "invalid json",
+			body:           `{"title":`,
+			mockFunc:       nil,
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "empty title",
+			body: `{"title":""}`,
+			mockFunc: func(title string) (models.Task, error) {
+				return models.Task{}, nil
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			service := &mockService{}
+
+			if tt.mockFunc != nil {
+				service.createFunc = tt.mockFunc
+			}
+			handler := &TaskHandler{
+				service: service,
+			}
+			req := httptest.NewRequest("POST", "/tasks", strings.NewReader(tt.body))
+			req.Header.Set("Content-Typre", "application/json")
+
+			rr := httptest.NewRecorder()
+
+			err := handler.CreateTask(rr, req)
+
+			if err != nil {
+				appErr, ok := err.(*utils.AppError)
+				if ok {
+					utils.JSONError(rr, appErr.Status, appErr.Message)
+					return
+				}
+			}
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.name == "succes" {
+				var resp Response
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if resp.Data.ID != 1 {
+					t.Errorf("expected ID 1, got %d", resp.Data.ID)
+				}
+
+				if resp.Data.Title != "Nueva tarea" {
+					t.Errorf("unexpected title: %s", resp.Data.Title)
+				}
+			}
+			if tt.name == "invalid json" || tt.name == "empty title" {
+
+				var resp ErrorResponse
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if resp.Error == "" {
+					t.Errorf("expected error message")
+				}
+			}
+
+		})
+	}
 }
 
 func TestGetByID_Handler(t *testing.T) {
