@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"tasks-api/internal/models"
@@ -14,6 +15,13 @@ import (
 
 type mockService struct {
 	getByIDFunc func(in int) (models.Task, error)
+	createFunc  func(title string) (models.Task, error)
+}
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+type Response struct {
+	Data models.Task `json:"data"`
 }
 
 func (m *mockService) GetTaskByID(id int) (models.Task, error) {
@@ -24,7 +32,7 @@ func (m *mockService) GetAllTasks() ([]models.Task, error) {
 }
 
 func (m *mockService) CreateTask(title string) (models.Task, error) {
-	return models.Task{}, nil
+	return m.createFunc(title)
 }
 
 func (m *mockService) UpdateTask(id int, title string) error {
@@ -79,7 +87,6 @@ func TestGetByID_Handler(t *testing.T) {
 				service: service,
 			}
 			req := httptest.NewRequest("GET", "/tasks/"+tt.id, nil)
-
 			vars := map[string]string{
 				"id": tt.id,
 			}
@@ -92,12 +99,45 @@ func TestGetByID_Handler(t *testing.T) {
 			if err != nil {
 				appErr, ok := err.(*utils.AppError)
 				if ok {
-					rr.WriteHeader(appErr.Status)
+					utils.JSONError(rr, appErr.Status, appErr.Message)
+					return
 				}
 			}
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.name == "succes" {
+				t.Log("BODY:", rr.Body.String())
+
+				var resp Response
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if resp.Data.ID != 1 {
+					t.Errorf("expected ID 1, got %d", resp.Data.ID)
+				}
+
+				if resp.Data.Title != "Test" {
+					t.Errorf("expected title Test, got %s", resp.Data.Title)
+				}
+			}
+			if tt.name == "not found" || tt.name == "invalid id" {
+
+				var resp ErrorResponse
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if resp.Error == "" {
+					t.Errorf("expected error message, got empty")
+				}
 			}
 
 		})
