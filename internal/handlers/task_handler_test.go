@@ -19,6 +19,7 @@ type mockService struct {
 	createFunc  func(title string) (models.Task, error)
 	updateFunc  func(id int, title string) error
 	deleteFunc  func(id int) error
+	getAllFunc  func() ([]models.Task, error)
 }
 type ErrorResponse struct {
 	Error string `json:"error"`
@@ -31,7 +32,7 @@ func (m *mockService) GetTaskByID(id int) (models.Task, error) {
 	return m.getByIDFunc(id)
 }
 func (m *mockService) GetAllTasks() ([]models.Task, error) {
-	return nil, nil
+	return m.getAllFunc()
 }
 
 func (m *mockService) CreateTask(title string) (models.Task, error) {
@@ -438,8 +439,106 @@ func TestDelete_Handler(t *testing.T) {
 					t.Errorf("expected error message, got empty")
 				}
 			}
-
 		})
 	}
+}
 
+func TestGetAllTask_Handler(t *testing.T) {
+
+	tests := []struct {
+		name           string
+		mockFunc       func() ([]models.Task, error)
+		expectedStatus int
+		expectedLen    int
+	}{
+		{
+			name: "success",
+			mockFunc: func() ([]models.Task, error) {
+				return []models.Task{
+					{ID: 1, Title: "Task 1"},
+					{ID: 2, Title: "Task 2"},
+				}, nil
+			},
+			expectedStatus: http.StatusOK,
+			expectedLen:    2,
+		},
+		{
+			name: "empty list",
+			mockFunc: func() ([]models.Task, error) {
+				return []models.Task{}, nil
+			},
+			expectedStatus: http.StatusOK,
+			expectedLen:    0,
+		},
+		{
+			name: "service error",
+			mockFunc: func() ([]models.Task, error) {
+				return nil, utils.NewAppError(
+					"INTERNAL_ERROR",
+					"error al obtener tareas",
+					http.StatusInternalServerError,
+				)
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			service := &mockService{
+				getAllFunc: tt.mockFunc,
+			}
+
+			handler := &TaskHandler{
+				service: service,
+			}
+			req := httptest.NewRequest("GET", "/tasks", nil)
+			rr := httptest.NewRecorder()
+
+			err := handler.GetTasks(rr, req)
+
+			if err != nil {
+
+				if appErr, ok := err.(*utils.AppError); ok {
+					utils.JSONError(rr, appErr.Status, appErr.Message)
+					return
+				}
+			}
+
+			if rr.Code != tt.expectedStatus {
+				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
+			}
+
+			if tt.name == "succes" || tt.name == "empty list" {
+
+				type Response struct {
+					Data []models.Task `json:"data"`
+				}
+				var resp Response
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if len(resp.Data) != tt.expectedLen {
+					t.Errorf("expected %d tasks, got %d", tt.expectedLen, len(resp.Data))
+				}
+			}
+			if tt.name == "service error" {
+
+				var resp ErrorResponse
+
+				err := json.Unmarshal(rr.Body.Bytes(), &resp)
+				if err != nil {
+					t.Errorf("error parsing JSON: %v", err)
+				}
+
+				if resp.Error == "" {
+					t.Errorf("expected error message, got empty")
+				}
+			}
+		})
+	}
 }

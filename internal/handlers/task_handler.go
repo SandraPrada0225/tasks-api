@@ -25,7 +25,10 @@ func (h *TaskHandler) GetTasks(w http.ResponseWriter, r *http.Request) error {
 
 	tasks, err := h.service.GetAllTasks()
 	if err != nil {
-		return err //utils.NewError("Error al obtener tareas", http.StatusInternalServerError)
+		return utils.NewAppError(
+			"INTERNAL_ERROR",
+			"Error al obtener tareas",
+			http.StatusInternalServerError)
 	}
 	utils.JSONResponse(w, http.StatusOK, tasks)
 	return nil
@@ -70,7 +73,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 	task, err := h.service.CreateTask(body.Title)
 	if err != nil {
 		return utils.NewAppError(
-			"ITERNAL_ERROR",
+			"INTERNAL_ERROR",
 			"Error al guadar los datos en la DB",
 			http.StatusInternalServerError)
 	}
