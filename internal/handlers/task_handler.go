@@ -69,7 +69,10 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) error {
 
 	task, err := h.service.CreateTask(body.Title)
 	if err != nil {
-		return err //utils.NewError("Error al guadar los datos en la DB", http.StatusInternalServerError)
+		return utils.NewAppError(
+			"ITERNAL_ERROR",
+			"Error al guadar los datos en la DB",
+			http.StatusInternalServerError)
 	}
 	//responde con la tarea creada
 	utils.JSONResponse(w, http.StatusCreated, task)
@@ -82,23 +85,35 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) error {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return err //utils.NewError("ID invalido", http.StatusBadRequest)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			"ID invalido",
+			http.StatusBadRequest)
 	}
 
 	var UpdateTask models.Task
 	err = json.NewDecoder(r.Body).Decode(&UpdateTask)
 	if err != nil {
-		return err //utils.NewError(err.Error(), http.StatusBadRequest)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			err.Error(),
+			http.StatusBadRequest)
 	}
 
 	//validaciones
 	if strings.TrimSpace(UpdateTask.Title) == "" {
-		return err //utils.NewError("El titulo es obligatorio", http.StatusBadRequest)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			"El titulo es obligatorio",
+			http.StatusBadRequest)
 	}
 
 	err = h.service.UpdateTask(id, UpdateTask.Title)
 	if err != nil {
-		return err //utils.NewError(err.Error(), http.StatusNotFound)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			err.Error(),
+			http.StatusNotFound)
 	}
 	utils.JSONResponse(w, http.StatusOK, map[string]string{
 		"message": "Tarea actualizada",
@@ -112,12 +127,18 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) error {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return err //utils.NewError("ID invalido", http.StatusBadRequest)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			"ID invalido",
+			http.StatusBadRequest)
 	}
 
 	err = h.service.DeleteTask(id)
 	if err != nil {
-		return err //utils.NewError(err.Error(), http.StatusNotFound)
+		return utils.NewAppError(
+			"INAVLID_TITLE",
+			err.Error(),
+			http.StatusNotFound)
 	}
 
 	utils.JSONResponse(w, http.StatusOK, map[string]string{
