@@ -14,6 +14,7 @@ func ErrorMiddleware(next AppHandler) http.HandlerFunc {
 		start := time.Now()
 
 		err := next(w, r)
+		requestID := GetRequestID(r)
 
 		duration := time.Since(start)
 		if err != nil {
@@ -21,7 +22,8 @@ func ErrorMiddleware(next AppHandler) http.HandlerFunc {
 			if appErr, ok := err.(*utils.AppError); ok {
 
 				log.Printf(
-					"[ERROR] %s %s |%d|%s|%v",
+					"[ERROR] [%s] %s %s |%d|%s|%v",
+					requestID,
 					r.Method,
 					r.URL.Path,
 					appErr.Status,
@@ -47,7 +49,8 @@ func ErrorMiddleware(next AppHandler) http.HandlerFunc {
 
 		//exito
 		log.Printf(
-			"[OK] %s %s |%v",
+			"[OK] [%s] %s %s |%v",
+			requestID,
 			r.Method,
 			r.URL.Path,
 			duration,
