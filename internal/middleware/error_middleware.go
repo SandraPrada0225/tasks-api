@@ -30,7 +30,7 @@ func ErrorMiddleware(next AppHandler) http.HandlerFunc {
 					appErr.Message,
 					duration,
 				)
-				utils.JSONError(w, appErr.Status, appErr.Message)
+				utils.JSONError(w, appErr)
 				return
 			}
 
@@ -44,7 +44,11 @@ func ErrorMiddleware(next AppHandler) http.HandlerFunc {
 			)
 
 			//error genérico
-			utils.JSONError(w, http.StatusInternalServerError, "Error interno del servidor")
+			utils.JSONError(w, &utils.AppError{
+				Code:    "INTERNAL_ERROR",
+				Message: "Error interno",
+				Status:  http.StatusInternalServerError,
+			})
 		}
 
 		//exito

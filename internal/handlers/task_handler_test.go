@@ -23,7 +23,10 @@ type mockService struct {
 	getAllFunc  func() ([]models.Task, error)
 }
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
 }
 type Response struct {
 	Data models.Task `json:"data"`
@@ -133,8 +136,12 @@ func TestCreateTask_Handler(t *testing.T) {
 					t.Errorf("error parsing JSON: %v", err)
 				}
 
-				if resp.Error == "" {
+				if resp.Error.Message == "" {
 					t.Errorf("expected error message")
+				}
+
+				if resp.Error.Code == "" {
+					t.Errorf("expected error code")
 				}
 			}
 
@@ -225,8 +232,12 @@ func TestGetByID_Handler(t *testing.T) {
 					t.Errorf("error parsing JSON: %v", err)
 				}
 
-				if resp.Error == "" {
-					t.Errorf("expected error message, got empty")
+				if resp.Error.Message == "" {
+					t.Errorf("expected error message")
+				}
+
+				if resp.Error.Code == "" {
+					t.Errorf("expected error code")
 				}
 			}
 
@@ -326,8 +337,12 @@ func TestUpdate_Handler(t *testing.T) {
 					t.Errorf("error parsing JSON: %v", err)
 				}
 
-				if resp.Error == "" {
-					t.Errorf("expected error message, got empty")
+				if resp.Error.Message == "" {
+					t.Errorf("expected error message")
+				}
+
+				if resp.Error.Code == "" {
+					t.Errorf("expected error code")
 				}
 			}
 
@@ -415,8 +430,12 @@ func TestDelete_Handler(t *testing.T) {
 					t.Errorf("error parsing JSON: %v", err)
 				}
 
-				if resp.Error == "" {
-					t.Errorf("expected error message, got empty")
+				if resp.Error.Message == "" {
+					t.Errorf("expected error message")
+				}
+
+				if resp.Error.Code == "" {
+					t.Errorf("expected error code")
 				}
 			}
 		})
@@ -508,8 +527,12 @@ func TestGetAllTask_Handler(t *testing.T) {
 					t.Errorf("error parsing JSON: %v", err)
 				}
 
-				if resp.Error == "" {
-					t.Errorf("expected error message, got empty")
+				if resp.Error.Message == "" {
+					t.Errorf("expected error message")
+				}
+
+				if resp.Error.Code == "" {
+					t.Errorf("expected error code")
 				}
 			}
 		})

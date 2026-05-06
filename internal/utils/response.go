@@ -5,16 +5,16 @@ import (
 	"net/http"
 )
 
-type APIresponse struct {
+type ErrorResponse struct {
 	Data  interface{} `json:"data"`
-	Error interface{} `json:"error"`
+	Error *AppError   `json:"error"`
 }
 
 func JSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	resp := APIresponse{
+	resp := ErrorResponse{
 		Data:  data,
 		Error: nil,
 	}
@@ -22,13 +22,13 @@ func JSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func JSONError(w http.ResponseWriter, status int, message string) {
+func JSONError(w http.ResponseWriter, appErr *AppError) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(appErr.Status)
 
-	resp := APIresponse{
+	resp := ErrorResponse{
 		Data:  nil,
-		Error: message,
+		Error: appErr,
 	}
 
 	json.NewEncoder(w).Encode(resp)
