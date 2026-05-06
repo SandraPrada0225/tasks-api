@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"tasks-api/internal/middleware"
 	"tasks-api/internal/models"
 	"tasks-api/internal/utils"
 	"testing"
@@ -94,15 +95,8 @@ func TestCreateTask_Handler(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			err := handler.CreateTask(rr, req)
-
-			if err != nil {
-				appErr, ok := err.(*utils.AppError)
-				if ok {
-					utils.JSONError(rr, appErr.Status, appErr.Message)
-					return
-				}
-			}
+			wrapped := middleware.ErrorMiddleware(handler.CreateTask)
+			wrapped(rr, req)
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
@@ -193,15 +187,8 @@ func TestGetByID_Handler(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			err := handler.GetTaskByID(rr, req)
-
-			if err != nil {
-				appErr, ok := err.(*utils.AppError)
-				if ok {
-					utils.JSONError(rr, appErr.Status, appErr.Message)
-					return
-				}
-			}
+			wrapped := middleware.ErrorMiddleware(handler.GetTaskByID)
+			wrapped(rr, req)
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
@@ -305,15 +292,8 @@ func TestUpdate_Handler(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			err := handler.UpdateTask(rr, req)
-
-			if err != nil {
-
-				if appErr, ok := err.(*utils.AppError); ok {
-					utils.JSONError(rr, appErr.Status, appErr.Message)
-					return
-				}
-			}
+			wrapped := middleware.ErrorMiddleware(handler.UpdateTask)
+			wrapped(rr, req)
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
@@ -393,6 +373,7 @@ func TestDelete_Handler(t *testing.T) {
 				service: service,
 			}
 			req := httptest.NewRequest("DELETE", "/tasks/"+tt.id, nil)
+
 			vars := map[string]string{
 				"id": tt.id,
 			}
@@ -400,15 +381,8 @@ func TestDelete_Handler(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			err := handler.DeleteTask(rr, req)
-
-			if err != nil {
-
-				if appErr, ok := err.(*utils.AppError); ok {
-					utils.JSONError(rr, appErr.Status, appErr.Message)
-					return
-				}
-			}
+			wrapped := middleware.ErrorMiddleware(handler.DeleteTask)
+			wrapped(rr, req)
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
@@ -496,15 +470,8 @@ func TestGetAllTask_Handler(t *testing.T) {
 			req := httptest.NewRequest("GET", "/tasks", nil)
 			rr := httptest.NewRecorder()
 
-			err := handler.GetTasks(rr, req)
-
-			if err != nil {
-
-				if appErr, ok := err.(*utils.AppError); ok {
-					utils.JSONError(rr, appErr.Status, appErr.Message)
-					return
-				}
-			}
+			wrapped := middleware.ErrorMiddleware(handler.GetTasks)
+			wrapped(rr, req)
 
 			if rr.Code != tt.expectedStatus {
 				t.Errorf("expected %d, got %d", tt.expectedStatus, rr.Code)
