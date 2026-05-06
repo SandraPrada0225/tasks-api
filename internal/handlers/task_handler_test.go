@@ -29,6 +29,12 @@ type Response struct {
 	Data models.Task `json:"data"`
 }
 
+type MessageResponse struct {
+	Data struct {
+		Message string `json:"message"`
+	} `json:"data"`
+}
+
 func (m *mockService) GetTaskByID(id int) (models.Task, error) {
 	return m.getByIDFunc(id)
 }
